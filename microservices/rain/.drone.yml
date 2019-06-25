@@ -1,0 +1,25 @@
+kind: pipeline
+name: default
+
+steps:
+  - name: publish
+    image: plugins/docker
+    settings:
+      registry: registry.njuics.cn
+      repo: registry.njuics.cn/wdongyu/rain_test
+      tags: ${DRONE_COMMIT:0:8}
+      # tags: ${DRONE_TAG}
+      username:
+        from_secret: wdongyu_username
+      password:
+        from_secret: wdongyu_password
+       debug: true
+      custom_dns: [ 114.212.189.138 ]
+
+  - name: deploy
+    image: registry.njuics.cn/drone/kubectl
+    commands:
+      - rm -rf /root/.kube && cp -r .kube /root
+      - sed -ie "s/VERSION/${DRONE_COMMIT:0:8}/g" deploy/demo.yaml
+      # - cat deploy/demo.yaml
+      - kubectl apply -f deploy/demo.yaml -n typhoon
