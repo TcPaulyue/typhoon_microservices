@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>websocket</title>
+</head>
+<!--<script th:src="@{sockjs.min.js}"></script>
+<script th:src="@{stomp.min.js}"></script>
+<script th:src="@{jquery.js}"></script>-->
+<script type="text/javascript" src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.min.js"></script>
+<script src="http://cdn.bootcss.com/stomp.js/2.3.3/stomp.min.js"></script>
+<script src="https://cdn.bootcss.com/sockjs-client/1.1.4/sockjs.min.js"></script>
+<body>
+<div style="margin: auto;text-align: left;">
+    <h1>台风系统</h1>
+</div>
+<div id="message" style="text-align: left;"></div>
+<div id="typhoon" style="text-align: left;"></div>
+<input  type="text" th:value="${userId}" id="userId" style="display: none" />
+<input  type="text" th:value="${fileId}" id="fileId" style="display: none" />
+</body>
+<script type="text/javascript">
+    var webSocket;
+    if ("WebSocket" in window)
+    {
+        webSocket = new WebSocket("ws://localhost:8080/websocket");
+//        webSocket = new WebSocket("ws://localhost:8080/websocket/user0/file1")
+        //连接发生错误的回调方法
+        webSocket.onerror = function(){
+            setMessageInnerHTML("系统","error");
+        };
+        //连通之后的回调事件
+        webSocket.onopen = function()
+        {
+            //webSocket.send( document.getElementById('username').value+"已经上线了");
+            console.log("已经连通了websocket");
+            setMessageInnerHTML("已经连通了websocket"+'</br>');
+        };
+        //接收后台服务端的消息
+        webSocket.onmessage = function (evt)
+        {
+            var received_msg = evt.data;
+            console.log("数据已接收:" +received_msg);
+            //setMessageInnerHTML(received_msg);
+            var obj = JSON.parse(received_msg);
+            var kind=obj['kind'];
+            if(kind=="rain") {
+                var time = obj['time'];
+                var location = obj['location'];
+                var prec = obj['prec'];
+                var level = obj['level'];
+                setMessageInnerHTML("雨情："+'</br>'+"时间:" + time + '</br>' + "地点: " + location + '</br>' + "降水量: " + prec + '</br>' + "水位: " + level + '</br>')
+                //setTyphoonInnerHTML("台风：")
+            }
+            else if(kind=="typhoon") {
+                var time=obj['time'];
+                var longitude=obj['longitude'];
+                var latitude=obj['latitude'];
+                var strong=obj['strong'];
+                var pressure=obj['pressure'];
+                var speed=obj['speed'];
+                var power=obj['power'];
+                setTyphoonInnerHTML("台风: "+'</br>'+"时间: "+time+'</br>'+"位置: "+longitude+"  "+latitude+'</br>'
+                +"强度: "+strong+'</br>'+"压力: "+pressure+'</br>'+"速度: "+speed+'</br>'+"台风等级: "+power+'</br>');
+            }
+            else if(kind=="weather"){
+
+            }
+        };
+
+        //连接关闭的回调事件
+        webSocket.onclose = function()
+        {
+            console.log("连接已关闭...");
+            setMessageInnerHTML("连接已经关闭....");
+        };
+    }
+    else{
+        // 浏览器不支持 WebSocket
+        alert("您的浏览器不支持 WebSocket!");
+    }
+    //将消息显示在网页上
+    function setMessageInnerHTML(innerHTML) {
+        document.getElementById('message').innerHTML = innerHTML;
+    }
+    function setTyphoonInnerHTML(innerHTML) {
+        document.getElementById('typhoon').innerHTML=innerHTML;
+    }
+</script>
+</html>
